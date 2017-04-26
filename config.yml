@@ -1,0 +1,14 @@
+extensions: ['*png', '*gif', '*jpg', '*pdf', '*mp3', '*mp4']
+badextensions: ['*.php5','*.suspected']
+locations: ['/var/www/html']
+# inevitably there will be exceptions where legitimate developers follow patterns I am searching for. there will always be ... add them here
+exceptions: ['getid3.lib.php', 'getid3.php', 'TplLib.php', 'wpallimport/plugin.php', 'node_modules/less/gradlew.bat', 'piwik/libs/pChart/class/pData.class.php']
+# various patterns that I have found
+patterns: ['@$_POST', '@eval', 'PHP_SESSION_PHP', 'Windows-1251', 'PHNjcmlwdCB0eXBlPSJ0ZXh0L2phdmFzY3JpcH', 'https://packetstormsecurity.com/UNIX/penetration', 'http://ftp.powernet.com.tr/supermail/debug/k3', 'ls_setcheckboxall', 'http://fb.com/gassrini.gov.tn', 'Fallag Gassrini', 'Tunisian Fallaga Team', 'c999shell', 'http://ntuan', 'eval(gzuncompress(base64_decode(','function actionFilesMan','Shell has been removed','https://github.com/tennc/webshell','http://tennc']
+pathtodefinitios:'/path/to/.definitions'
+excludedirs: ['gitrepo', '.svn', '.git' ,'.sass-cache']
+# these are patterns that shouldn't be found in non-PHP files
+otherpatterns:['<?php']
+log: '/var/logs/'
+reportemail: ''
+rmethod: 'cmd'
