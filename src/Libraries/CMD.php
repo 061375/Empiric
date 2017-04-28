@@ -21,6 +21,8 @@ class CMD
             if (php_sapi_name() !== 'cli')
                 die($error); // no message
         }
+        return php_sapi_name();
+        
     }
     /**
      * determines what should be run from a CMD operation
