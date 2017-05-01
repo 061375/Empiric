@@ -11,10 +11,7 @@ class ErrorHandler
 {
 	
 	protected $errors;
-	
-	function __construct() {
-		//parent::__construct(); 
-	}
+
     /**
      * Get Error messages
      *

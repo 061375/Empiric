@@ -276,6 +276,25 @@ class General
 		return $default;
     }
     /**
+     * recurse through specified folder search for specified file type
+     * @param string $dir
+     * @param string $ext
+     * @param mixed $return the first time through this array needs to assigned
+     * @return array
+     * */
+    public static function recurse_get_files($dir,$ext = '.php',$return = false)
+    {
+        if(false === $return)
+            $return = array();
+        $Directory = new \RecursiveDirectoryIterator($dir);
+        $Iterator = new \RecursiveIteratorIterator($Directory);
+        $objects = new \RegexIterator($Iterator, '/^.+\\'.$ext.'$/i', \RecursiveRegexIterator::GET_MATCH);
+        foreach($objects as $name => $object){
+            $return[str_replace('.html.php','',basename($name))] = $name;
+        }
+        return $return;
+    }
+    /**
      * @param string $url
      * @param array $post
      * @param bool $code

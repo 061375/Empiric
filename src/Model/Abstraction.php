@@ -80,6 +80,7 @@ class Abstraction {
 	private function read() {
 		if(false == file_exists($this->dbpath)) {
 			// set error
+			$GLOBALS['errors']->set_error_message(__METHOD__.' the requested file does not exist: '.$this->dbpath);
 			return false;
 		}
 		return file_get_contents($this->dbpath);
@@ -93,10 +94,7 @@ class Abstraction {
 
 		if(false == is_string($data)) {
 			// set error
-			return false;
-		}
-		if(false == file_exists($this->dbpath)) {
-			// set error
+			$GLOBALS['errors']->set_error_message(__METHOD__.' expected string. received '.gettype($data));
 			return false;
 		}
 		// 

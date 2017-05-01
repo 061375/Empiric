@@ -18,6 +18,7 @@ class XML {
 
 		} catch(Exception $e) {
 			// set error message
+			$GLOBALS['errors']->set_error_message($e->getMessage());
 			return false;
 		} 
 		return $xmlobj;
