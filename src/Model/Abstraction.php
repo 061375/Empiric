@@ -69,8 +69,8 @@ class Abstraction {
 		if(false === $this->read()) {
 			return false;
 		}
-		$xml = $this->libs['enc']->decrypt($file);
-		return $this->libs['xml']->getObj($xml);
+		$file = $this->libs['enc']->decrypt($file);
+		return $this->libs['xml']->getObj($file);
 	}
 	/** 
 	 * read
