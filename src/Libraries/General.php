@@ -276,6 +276,19 @@ class General
 		return $default;
     }
     /**
+     * str_replace the first result only
+     * @param string $from
+     * @param string $to
+     * @param string $subject
+     * @return string
+     * */
+    public static function str_replace_first($from, $to, $subject)
+    {
+        $from = '/'.preg_quote($from, '/').'/';
+
+        return preg_replace($from, $to, $subject, 1);
+    }
+    /**
      * recurse through specified folder search for specified file type
      * @param string $dir
      * @param string $ext

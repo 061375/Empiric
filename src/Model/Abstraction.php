@@ -11,7 +11,8 @@ namespace Empiric\Model;
 * If the file is locked, the script will loop until it either gets an unlock or times out
 * 
 * The data stored as XML is searchable with a simple SQL markup that will be equivilent 
-* to the basics of SQL
+* to the basics of SQL. I realize this is at best un-neccessary. But, really its about the exercise...
+* I simply want to do it. 
 * 
 */
 use Empiric\Libraries\General;
@@ -72,6 +73,57 @@ class Abstraction {
 		$file = $this->libs['enc']->decrypt($file);
 		return $this->libs['xml']->getObj($file);
 	}
+//$res = $xpath->query("//book/price[.>'40']/parent::*");  // select * from book where price > 40
+//$res = $xpath->query("//book[price<35]/author");  // select author from book where price < 35 
+//$res = $xpath->query("//book[contains(title,\"Mid\")]"); // select * from book where title like '%Mid%'
+//$res = $xpath->query("//book/price[.>5 and .<50]/parent::*");  // select * from book where price > 5 and price < 50
+	public function query($q) {
+		$match = array(
+			'actions' => array('select','delete','update','insert','create','drop','explain','show'),
+			'locations'=>array('table','where','from','into'),
+			'operators'=>array('and','or','<','>','=','!','>=','<=','!=')
+		);
+
+		$query = array();
+
+		// get the quoted content first that might contain spaces etc
+		preg_match_all("/'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'/s",$q,$m);
+		if(isset($m[0]) AND (count($m[0]) > 0)) {
+			foreach ($m[0] as $key => $value) {
+				$q = str_replace_first($value,'[{'.$key.'}]',$q);
+			}
+		}
+		
+		// 
+		$statements = explode(" ",$q);
+		foreach ($statements as $key => $s) {
+			$s = str_replace('`','',$s);
+			// find actions
+			foreach ($match['actions'] as $m) {
+				if($m == trim($s)) {
+					$query['actions'][$key] = $m;
+				}
+			}
+			// find locations
+			foreach ($match['locations'] as $m) {
+				if($m == trim($s)) {
+					$query['locations'][$key] = $m;
+				}
+			}
+			// find operators
+			foreach ($match['operators'] as $m) {
+				if($m == trim($s)) {
+					$query['operators'][$key] = $m;
+				}
+			}
+			if((strpos('[{',$s) !== false) AND (strpos('}]',$s) !== false)) {
+				$k = str_replace('[{',$s);
+				$k = str_replace('}]',$k);
+				$query['strings'][$key] = isset($m[0][$k]) ? $m[0][$k] : '';
+			}
+		}
+	}
+
 	/** 
 	 * read
 	 * @param string $data
@@ -109,5 +161,29 @@ class Abstraction {
 		}
 		//
 		return file_put_contents($this->dbpath, $data);
+	}
+}
+
+class Ab_Actions {
+	//
+	/* @param array */
+	private $query;
+	//
+	function __construct($query) {
+		$this->query = $query;
+	}
+	/** 
+	 * @param string $method
+	 * @return mixed
+	 * */
+	function router($method) {
+		if(false == method_exists($this, $method)) {
+			$GLOBALS['errors']->set_error_message('you have an error in your query near '.$method.'; please refer to he documentation');
+			return false;	
+		}
+		return $this->$method();
+	}
+	function select() {
+
 	}
 }
