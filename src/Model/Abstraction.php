@@ -24,7 +24,7 @@ class Abstraction {
 	/** 
 	 * @param obj the database object
 	 * */
-	public $db;
+	protected $db;
 
 	/** 
 	 * @param string path to the definitions database
@@ -60,6 +60,9 @@ class Abstraction {
 		$this->libs['enc'] = new Encrypt();
 		$this->libs['xml'] = new XML();
 		$this->db = $this->get_connection();
+		$this->db->actions = new Ab_Actions();
+		$this->db->locations = new Ab_Locations();
+		$this->db->operations = new Ab_Operations();
 	}
 	/** 
 	 * get_connection
@@ -71,7 +74,14 @@ class Abstraction {
 			return false;
 		}
 		$file = $this->libs['enc']->decrypt($file);
-		return $this->libs['xml']->getObj($file);
+		$return = $this->libs['xml']->getObj($file);
+		if(false === isset($return->firstChild->nodeName)) {
+			// set error
+			$GLOBALS['errors']->set_error_message(__METHOD__.' database appears to be malformed.');
+			return false;
+		}
+		$return->root = $return->firstChild->nodeName;
+		return $return;
 	}
 //$res = $xpath->query("//book/price[.>'40']/parent::*");  // select * from book where price > 40
 //$res = $xpath->query("//book[price<35]/author");  // select author from book where price < 35 
@@ -84,7 +94,7 @@ class Abstraction {
 			'operators'=>array('and','or','<','>','=','!','>=','<=','!=')
 		);
 
-		$query = array();
+		$this->db->query = array();
 
 		// get the quoted content first that might contain spaces etc
 		preg_match_all("/'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'/s",$q,$m);
@@ -107,7 +117,7 @@ class Abstraction {
 			// find locations
 			foreach ($match['locations'] as $m) {
 				if($m == trim($s)) {
-					$query['locations'][$key] = $m;
+					$query['locations'][$m] = $key;
 				}
 			}
 			// find operators
@@ -122,8 +132,16 @@ class Abstraction {
 				$query['strings'][$key] = isset($m[0][$k]) ? $m[0][$k] : '';
 			}
 		}
-	}
+		$this->db->query['all'] = $statements;
 
+		foreach($this->db->query['actions'] as $action) {
+			$results[] = $this->db->actions->router($action);
+		}
+		if($GLOBALS['errors']->has_error()) {
+			return false;
+		}
+		return $results;
+	}
 	/** 
 	 * read
 	 * @param string $data
@@ -163,14 +181,16 @@ class Abstraction {
 		return file_put_contents($this->dbpath, $data);
 	}
 }
-
-class Ab_Actions {
+/** 
+ * 
+ * 
+ * */
+class Ab_Actions extends Abstraction {
 	//
 	/* @param array */
 	private $query;
 	//
-	function __construct($query) {
-		$this->query = $query;
+	function __construct() {
 	}
 	/** 
 	 * @param string $method
@@ -181,9 +201,92 @@ class Ab_Actions {
 			$GLOBALS['errors']->set_error_message('you have an error in your query near '.$method.'; please refer to he documentation');
 			return false;	
 		}
+		$this->query = $this->db->query;
 		return $this->$method();
 	}
 	function select() {
+		$q = '';
+		if(false == isset($this->query['locations']['from'])) {
+			$GLOBALS['errors']->set_error_message('you have an error in your query near SELECT expects a FROM clause; please refer to he documentation');
+			return false;	
+		}
+		// get from what table
+		$q = $this->libs['locations']->router('from');
+		if(false === $q) return false;
+		
+		// determine search criteria
 
+		// determine what columns to return
+
+		// return thos columns
+
+
+	}
+}
+/** 
+ * 
+ * 
+ * */
+class Ab_Locations extends Abstraction {
+	//
+	/* @param array */
+	private $query;
+	//
+	function __construct($query) {
+
+	}
+	/** 
+	 * @param string $method
+	 * @return mixed
+	 * */
+	function router($method) {
+		if(false == method_exists($this, $method)) {
+			$GLOBALS['errors']->set_error_message('you have an error in your query near '.$method.'; please refer to he documentation');
+			return false;	
+		}
+		$this->query = $query;
+		return $this->$method();
+	}
+	/** 
+	 * @return string
+	 * */
+	function from() {
+		$root = $this->root;
+		$query = $this->query;
+		if(false == isset($query['all'][(int)$query['locations']['from']+=1])) {
+			// table not found error
+			$GLOBALS['errors']->set_error_message('you have an error in your query; table not found');
+			return false;	
+		}
+		if(false == isset($this->db->$root->$query['all'][(int)$query['locations']['from']+=1])) {
+			// table not found error
+			$GLOBALS['errors']->set_error_message('you have an error in your query; table '.$query['all'][(int)$query['locations']['from']+=1].' not found');
+			return false;
+		}
+		return $root.'/'.$this->db->$root->$query['all'][(int)$query['locations']['from']+=1];
+	}
+}
+/** 
+ * 
+ * 
+ * */
+class Ab_Operators extends Abstraction {
+	//
+	/* @param array */
+	private $query;
+	//
+	function __construct() {
+	}
+	/** 
+	 * @param string $method
+	 * @return mixed
+	 * */
+	function router($method) {
+		if(false == method_exists($this, $method)) {
+			$GLOBALS['errors']->set_error_message('you have an error in your query near '.$method.'; please refer to he documentation');
+			return false;	
+		}
+		$this->query = $query;
+		return $this->$method();
 	}
 }
